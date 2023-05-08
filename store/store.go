@@ -18,6 +18,7 @@ import (
 type Loader[T any] struct {
 	dataPath string
 	rdr      *bufio.Reader
+	rfi      *os.File
 }
 
 func NewLoader[T any](dataPath string) *Loader[T] {
@@ -28,7 +29,7 @@ func (l *Loader[T]) Open() error {
 	if err != nil {
 		return err
 	}
-	defer rfi.Close()
+	l.rfi = rfi
 	l.rdr = bufio.NewReader(rfi)
 	return nil
 }
@@ -47,6 +48,9 @@ func (l *Loader[T]) Next(number int) ([]*T, error) {
 		next = append(next, &item)
 	}
 	return next, nil
+}
+func (l *Loader[T]) Close() {
+	l.rfi.Close()
 }
 func LoadAny[T any](dataPath string) ([]*T, error) {
 	rfi, err := os.OpenFile(dataPath, os.O_RDONLY, 0000)

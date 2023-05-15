@@ -2,7 +2,7 @@
  * @Author: fyfishie
  * @Date: 2023-05-08:10
  * @LastEditors: fyfishie
- * @LastEditTime: 2023-05-08:11
+ * @LastEditTime: 2023-05-15:09
  * @@email: fyfishie@outlook.com
  * @Description: :)
  */
@@ -33,8 +33,8 @@ func (l *Loader[T]) Open() error {
 	l.rdr = bufio.NewReader(rfi)
 	return nil
 }
-func (l *Loader[T]) Next(number int) ([]*T, error) {
-	next := []*T{}
+func (l *Loader[T]) Next(number int) ([]T, error) {
+	next := []T{}
 	for i := 0; i < number; i++ {
 		line, _, err := l.rdr.ReadLine()
 		if err != nil {
@@ -45,21 +45,21 @@ func (l *Loader[T]) Next(number int) ([]*T, error) {
 		if err != nil {
 			return next, err
 		}
-		next = append(next, &item)
+		next = append(next, item)
 	}
 	return next, nil
 }
 func (l *Loader[T]) Close() {
 	l.rfi.Close()
 }
-func LoadAny[T any](dataPath string) ([]*T, error) {
+func LoadAny[T any](dataPath string) ([]T, error) {
 	rfi, err := os.OpenFile(dataPath, os.O_RDONLY, 0000)
 	if err != nil {
 		return nil, err
 	}
 	defer rfi.Close()
 	rdr := bufio.NewReader(rfi)
-	res := []*T{}
+	res := []T{}
 	for {
 		line, _, err := rdr.ReadLine()
 		if err != nil {
@@ -73,7 +73,7 @@ func LoadAny[T any](dataPath string) ([]*T, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, &item)
+		res = append(res, item)
 	}
 	return res, nil
 }

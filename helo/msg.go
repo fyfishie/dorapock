@@ -2,7 +2,7 @@
  * @Author: fyfishie
  * @Date: 2023-05-19:11
  * @LastEditors: fyfishie
- * @LastEditTime: 2023-05-19:11
+ * @LastEditTime: 2023-05-21:19
  * @Description: :)
  * @email: muren.zhuang@outlook.com
  */
@@ -28,4 +28,10 @@ func ParseMsg(bs []byte) (Message, error) {
 	m := Message{}
 	err := json.Unmarshal(bs, &m)
 	return m, err
+}
+
+func ParseMsgNoErr(bs []byte) Message {
+	m := Message{}
+	json.Unmarshal(bs, &m)
+	return m
 }

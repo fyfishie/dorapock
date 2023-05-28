@@ -29,7 +29,6 @@ func (l *Loader[T]) Open() error {
 	if err != nil {
 		panic(err.Error())
 	}
-	defer rfi.Close()
 	scaner := bufio.NewScanner(rfi)
 	l.rfi = rfi
 	l.scaner = scaner

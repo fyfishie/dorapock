@@ -2,7 +2,7 @@
  * @Author: fyfishie
  * @Date: 2023-05-08:10
  * @LastEditors: fyfishie
- * @LastEditTime: 2023-05-15:09
+ * @LastEditTime: 2023-05-28:17
  * @@email: fyfishie@outlook.com
  * @Description: :)
  */
@@ -11,37 +11,40 @@ package store
 import (
 	"bufio"
 	"encoding/json"
-	"io"
 	"os"
 )
 
 type Loader[T any] struct {
 	dataPath string
-	rdr      *bufio.Reader
 	rfi      *os.File
+	scaner   *bufio.Scanner
 }
 
 func NewLoader[T any](dataPath string) *Loader[T] {
 	return &Loader[T]{dataPath: dataPath}
 }
+
 func (l *Loader[T]) Open() error {
-	rfi, err := os.OpenFile(l.dataPath, os.O_RDONLY, 0000)
+	rfi, err := os.Open(l.dataPath)
 	if err != nil {
-		return err
+		panic(err.Error())
 	}
+	defer rfi.Close()
+	scaner := bufio.NewScanner(rfi)
 	l.rfi = rfi
-	l.rdr = bufio.NewReader(rfi)
+	l.scaner = scaner
 	return nil
 }
-func (l *Loader[T]) Next(number int) ([]T, error) {
+
+func (l *Loader[T]) NextMany(number int) ([]T, error) {
 	next := []T{}
 	for i := 0; i < number; i++ {
-		line, _, err := l.rdr.ReadLine()
-		if err != nil {
-			return next, err
+		if !l.scaner.Scan() {
+			break
 		}
+		line := l.scaner.Bytes()
 		var item T
-		err = json.Unmarshal(line, &item)
+		err := json.Unmarshal(line, &item)
 		if err != nil {
 			return next, err
 		}
@@ -49,25 +52,21 @@ func (l *Loader[T]) Next(number int) ([]T, error) {
 	}
 	return next, nil
 }
+
 func (l *Loader[T]) Close() {
 	l.rfi.Close()
 }
+
 func LoadAny[T any](dataPath string) ([]T, error) {
-	rfi, err := os.OpenFile(dataPath, os.O_RDONLY, 0000)
+	rfi, err := os.Open(dataPath)
 	if err != nil {
-		return nil, err
+		panic(err.Error())
 	}
 	defer rfi.Close()
-	rdr := bufio.NewReader(rfi)
+	scaner := bufio.NewScanner(rfi)
 	res := []T{}
-	for {
-		line, _, err := rdr.ReadLine()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
+	for scaner.Scan() {
+		line := scaner.Bytes()
 		var item T
 		err = json.Unmarshal(line, &item)
 		if err != nil {
@@ -76,4 +75,19 @@ func LoadAny[T any](dataPath string) ([]T, error) {
 		res = append(res, item)
 	}
 	return res, nil
+}
+
+// you'd must confirm that there exists next line by Loader.HasNext()
+func (l *Loader[T]) Next() T {
+	var item T
+	line := l.scaner.Bytes()
+	err := json.Unmarshal(line, &item)
+	if err != nil {
+		return item
+	}
+	return item
+}
+
+func (l *Loader[T]) HasNext() bool {
+	return l.scaner.Scan()
 }
